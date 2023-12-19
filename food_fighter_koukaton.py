@@ -13,10 +13,10 @@ STEP_PLAY = 1
 STEP_GAMEOVER = 2
 
 # アイテム設定
-ITEM_TYPE_NUM = 2
+ITEM_TYPE_NUM = 3
 ITEM_WIDTH = 10
 ITEM_HEIGHT = 10 
-ITEM_MAX = 60
+ITEM_MAX = 20
 
 # こうかとん設定
 PLAYER_WIDTH = 50
@@ -53,6 +53,8 @@ img_player = pygame.image.load('ex05/img/3.png')
 img_donuts = pygame.transform.rotozoom(pygame.image.load('ex05/img/toriniku.png'),0,0.15)
 # アイテム（豆）
 img_red_hot = pygame.transform.rotozoom(pygame.image.load('ex05/img/mame.png'),0,0.15)
+#アイテム（毒キノコ）
+img_poison = pygame.transform.rotozoom(pygame.image.load('ex05/img/kinoko.png'),0,0.15)
 # ゲームオーバー
 txt_gameover = pygame.image.load('ex05/img/txt_gameover.png')
 
@@ -81,13 +83,16 @@ def move_player(key):
 def locate_item():
     # アイテム数MAX値まで繰り返し
     for i in range(ITEM_MAX):
-        # ランダムで鶏肉か豆どっちかを設定する
+        # ランダムで鶏肉か豆か毒キノコどれかを設定する
         item_x[i] = random.randint(50, SURFACE_WIDTH-50-ITEM_WIDTH/2)
         item_y[i] = random.randint(-500, 0)
 
         if i % ITEM_TYPE_NUM == 0:  
             # 鶏肉
             item_type[i] = 'd'
+        elif i % ITEM_TYPE_NUM == 1:
+            #毒キノコ
+            item_type[i] = 'k'
         else:
             # 豆
             item_type[i] = 'r'
@@ -113,6 +118,9 @@ def draw_item(surface):
         if item_hit[i] == False and item_type[i] == 'd':
             surface.blit(
                 img_donuts, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
+        elif item_hit[i] == False and item_type[i] == 'k':
+            surface.blit(
+                img_poison, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
         elif item_hit[i] == False and item_type[i] == 'r':
             surface.blit(
                 img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
@@ -124,6 +132,11 @@ def hit_item(category, surface):
     # 鶏肉の時は満腹メータプラス
     if category == 'd':
         stuffed += 10 
+        if stuffed > STUFFED_MAX:
+            stuffed = STUFFED_MAX
+    #毒キノコの時は満腹メータ少しプラス
+    elif category == 'k':
+        stuffed += 5
         if stuffed > STUFFED_MAX:
             stuffed = STUFFED_MAX
     # 豆の場合は満腹メータ激減り
@@ -138,6 +151,14 @@ def is_item_hit(x1, y1, x2, y2):
     if (abs(x1-x2) <= +p_width/2+ITEM_WIDTH/2 and abs(y1-y2) <= p_height/2+ITEM_HEIGHT/2):
         return True
     return False
+
+#毒キノコによる視界不良
+class Poison():
+    '''
+    毒キノコをキャッチすると5秒間視界が
+    白くなる機能を作成する
+    '''
+    #def __init__(self, PLAYER_Y: PLAYER_Y):
 
 # main関数
 def main():
@@ -179,8 +200,8 @@ def main():
             p_height = PLAYER_HEIGHT
             img_player = pygame.image.load('ex05/img/3.png')
 
-            # 最初は10個からスタートし、だんだん増えてくる
-            item_num = 10
+            # 最初は3個からスタートし、だんだん増えてくる
+            item_num = 5
 
             # アイテム落下
             locate_item()
@@ -191,7 +212,7 @@ def main():
                 step = STEP_GAMEOVER
                 timer = 0
             if item_num != ITEM_MAX and timer % 15 == 0:
-                item_num += 10
+                item_num += 2
 
             # 時間経過でも徐々に満腹メータ減る
             stuffed -= 0.5
