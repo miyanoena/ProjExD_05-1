@@ -1,0 +1,264 @@
+import logging
+import pygame
+import random
+import sys
+
+# 画面サイズ
+SURFACE_WIDTH = 800
+SURFACE_HEIGHT = 550
+
+# STEP
+STEP_READY = 0
+STEP_PLAY = 1
+STEP_GAMEOVER = 2
+
+# アイテム設定
+ITEM_TYPE_NUM = 2
+ITEM_WIDTH = 50
+ITEM_HEIGHT = 72 
+ITEM_MAX = 60
+
+# ビーバーちゃん設定
+PLAYER_WIDTH = 50
+PLAYER_HEIGHT = 72
+PLAYER_Y = 520
+
+# 満腹メータMAX
+STUFFED_MAX = 200
+
+# 各種初期値を設定
+step = STEP_READY  
+timer = 0 
+is_jump = 0
+p_width = PLAYER_WIDTH
+p_height = PLAYER_HEIGHT
+stuffed = STUFFED_MAX
+item_hit = [False] * ITEM_MAX
+item_x = [0] * ITEM_MAX
+item_y = [0] * ITEM_MAX
+item_type = [''] * ITEM_MAX
+item_num = 10
+flg_turn = False
+last_key = pygame.K_RIGHT
+dmg_effect = 0
+
+# 画像読み込み
+# アイコン
+icon = pygame.image.load('ex05/img/6.png')
+# 背景
+img_bg = pygame.image.load('ex05/img/pg_bg.jpg')
+# プレイヤー
+img_player = pygame.image.load('ex05/img/3.png')
+# アイテム（鶏肉）
+img_donuts = pygame.image.load('ex05/img/toriniku.png')
+# アイテム（唐辛子）
+img_red_hot = pygame.image.load('ex05/img/mame.png')
+# ゲームオーバー
+txt_gameover = pygame.image.load('ex05/img/txt_gameover.png')
+
+# プレイヤーの移動
+def move_player(key):
+    global px, is_jump, last_key, flg_turn, p_width, p_height
+
+    # 「⇦」キー押下の動き
+    if key[pygame.K_LEFT] == 1:  
+        px -= 10
+        if px < 50+p_width/2:
+            px = 50+p_width/2
+        if last_key == pygame.K_RIGHT:
+            flg_turn = True
+            last_key = pygame.K_LEFT
+    # 「→」キー押下した時の動き
+    elif key[pygame.K_RIGHT] == 1: 
+        px += 10
+        if px > SURFACE_WIDTH-50-p_width/2:
+            px = SURFACE_WIDTH-50-p_width/2
+        if last_key == pygame.K_LEFT:
+            flg_turn = True
+            last_key = pygame.K_RIGHT
+
+# アイテムの作成
+def locate_item():
+    # アイテム数MAX値まで繰り返し
+    for i in range(ITEM_MAX):
+        # ランダムでドーナツか唐辛子どっちかを設定する
+        item_x[i] = random.randint(50, SURFACE_WIDTH-50-ITEM_WIDTH/2)
+        item_y[i] = random.randint(-500, 0)
+
+        if i % ITEM_TYPE_NUM == 0:  
+            # ドーナツ
+            item_type[i] = 'd'
+        else:
+            # 激辛唐辛子
+            item_type[i] = 'r'
+
+# アイテムの落下と当たり判定
+def move_item(surface):
+    for i in range(item_num):
+        item_y[i] += 6 + i / 5 
+        if item_y[i] > SURFACE_HEIGHT:
+            item_hit[i] = False
+            item_x[i] = random.randint(50, SURFACE_WIDTH-50-ITEM_WIDTH/2)
+            item_y[i] = random.randint(-500, 0)
+
+        if item_hit[i] == False:
+            # プレイヤーとアイテムの座標を見て当たったか判定
+            if is_item_hit(px, PLAYER_Y, item_x[i], item_y[i]) == True:
+                item_hit[i] = True
+                hit_item(item_type[i], surface)
+
+# アイテムを描画
+def draw_item(surface):
+    for i in range(item_num):
+        if item_hit[i] == False and item_type[i] == 'd':
+            surface.blit(
+                img_donuts, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
+        elif item_hit[i] == False and item_type[i] == 'r':
+            surface.blit(
+                img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
+
+# アイテムに当たったときの処理
+def hit_item(category, surface):
+    global stuffed, dmg_effect
+
+    # ドーナツゲットの時は満腹メータプラス
+    if category == 'd':
+        stuffed += 10 
+        if stuffed > STUFFED_MAX:
+            stuffed = STUFFED_MAX
+    # 激辛唐辛子の場合は満腹メータ激減り
+    elif category == 'r':
+        stuffed -= 20
+        if stuffed < 0:
+            stuffed = 0
+        dmg_effect = 1
+
+# 当たり判定
+def is_item_hit(x1, y1, x2, y2):
+    if (abs(x1-x2) <= +p_width/2+ITEM_WIDTH/2 and abs(y1-y2) <= p_height/2+ITEM_HEIGHT/2):
+        return True
+    return False
+
+# main関数
+def main():
+    global step, timer, stuffed, px, is_jump
+    global item_num, img_player, flg_turn, dmg_effect
+    global p_width, p_height
+
+    # ウィンドウを作成
+    pygame.init()
+    pygame.display.set_caption('くいしんぼうビーバーちゃんのドーナツいっぱい食べたい！')
+    pygame.display.set_icon(icon)
+    clock = pygame.time.Clock()
+    surface = pygame.display.set_mode((SURFACE_WIDTH, SURFACE_HEIGHT))
+
+    # ループ
+    while True:
+        timer += 1
+
+        # イベントごとの処理
+        for event in pygame.event.get():
+            # 閉じるボタン押下された時はゲーム終了
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        # プレイ開始時
+        if step == STEP_READY:
+            # プレイモードへ
+            step = STEP_PLAY
+
+            # 満腹メータMAX
+            stuffed = STUFFED_MAX
+
+            flg_turn = False
+
+            # ビーバーちゃんスタンバイ
+            px = SURFACE_WIDTH / 2
+            p_width = PLAYER_WIDTH
+            p_height = PLAYER_HEIGHT
+            img_player = pygame.image.load('ex05/img/3.png')
+
+            # 最初は10個からスタートし、だんだん増えてくる
+            item_num = 10
+
+            # アイテム落下
+            locate_item()
+
+        # プレイモード
+        elif step == STEP_PLAY:
+            if stuffed <= 0:
+                step = STEP_GAMEOVER
+                timer = 0
+            if item_num != ITEM_MAX and timer % 15 == 0:
+                item_num += 10
+
+            # 時間経過でも徐々に満腹メータ減る
+            stuffed -= 0.5
+
+            # キャラクター、アイテム移動
+            move_player(pygame.key.get_pressed())
+            move_item(surface)
+
+        # ゲームオーバー
+        elif step == STEP_GAMEOVER:
+            if timer == 50:
+                step = STEP_READY
+                timer = 0
+
+        # 各種描画
+        bx = 0
+        by = 0
+
+        if dmg_effect > 0:
+            # ダメージ受けた場合は画面揺らす
+            bx = random.randint(-60, 20)
+            by = random.randint(-40, 10)
+            dmg_effect = 0
+            # ダメージ受けたらビーバーちゃん巨大化
+            p_width = p_width*1.2
+            p_height = p_height*1.2
+            img_player = pygame.transform.scale(img_player, (p_width,p_height))
+
+        # 背景
+        surface.blit(img_bg, [bx, by])
+
+        if flg_turn == True:
+            img_player = pygame.transform.flip(img_player, True, False)
+            flg_turn = False
+
+        # ビーバーちゃん描画
+        surface.blit(img_player, [px-p_width/2, PLAYER_Y-p_height/2])
+
+        # アイテム描画
+        draw_item(surface)
+
+        # ゲームオーバー
+        if step == STEP_GAMEOVER:
+            logging.info(stuffed)
+
+            # ゲームオーバーの文言のサブ画面を作ってメーン画面へかぶせる
+            sub_surface = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT), pygame.SRCALPHA)
+            sub_surface.fill((0, 0, 0, 100))
+            surface.blit(sub_surface, [0, 0])
+            surface.blit(txt_gameover, [100, 220])
+            stuffed = 0
+
+        # 満腹メータ
+        surface.fill((250, 237, 240), (50, 30, STUFFED_MAX, 40))
+        stuffed_r = 100
+        stuffed_g = 100
+        stuffed_b = 255
+        if stuffed < STUFFED_MAX/5:
+            # メーターが残り1/5になったら赤くする　
+            stuffed_r = 255
+            stuffed_g = 100
+            stuffed_b = 128
+        surface.fill((stuffed_r, stuffed_g, stuffed_b), (50, 30, stuffed, 40))
+
+        # ゲーム画面更新
+        pygame.display.update()
+        clock.tick(10)
+
+# main実行
+main()
