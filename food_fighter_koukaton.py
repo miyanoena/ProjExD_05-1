@@ -11,6 +11,7 @@ SURFACE_HEIGHT = 550
 STEP_READY = 0
 STEP_PLAY = 1
 STEP_GAMEOVER = 2
+STEP_GAMECLEAR = 3
 
 # アイテム設定
 ITEM_TYPE_NUM = 2
@@ -54,8 +55,9 @@ img_donuts = pygame.transform.rotozoom(pygame.image.load('ex05/img/toriniku.png'
 # アイテム（豆）
 img_red_hot = pygame.transform.rotozoom(pygame.image.load('ex05/img/mame.png'),0,0.15)
 # ゲームオーバー
-txt_gameover = pygame.image.load('ex05/img/txt_gameover.png')
-
+txt_gameover = pygame.transform.rotozoom(pygame.image.load('ex05/img/txt_gameover.png'),0, 0.6)
+# ゲームクリア
+txt_gameclear = pygame.transform.rotozoom(pygame.image.load('ex05/img/text_gameclear.png'),0, 0.6)
 # プレイヤーの移動
 def move_player(key):
     global px, is_jump, last_key, flg_turn, p_width, p_height
@@ -192,6 +194,9 @@ def main():
                 timer = 0
             if item_num != ITEM_MAX and timer % 15 == 0:
                 item_num += 10
+            if timer >= 1200:
+                step = STEP_GAMECLEAR
+                timer = 0
 
             # 時間経過でも徐々に満腹メータ減る
             stuffed -= 0.5
@@ -240,8 +245,33 @@ def main():
             # ゲームオーバーの文言のサブ画面を作ってメーン画面へかぶせる
             sub_surface = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT), pygame.SRCALPHA)
             sub_surface.fill((0, 0, 0, 100))
+
+            # テキストの矩形を取得
+            txt_rect = txt_gameover.get_rect()
+
+            # 画面の中央に配置するための座標を計算
+            text_x = (SURFACE_WIDTH - txt_rect.width) // 2
+            text_y = (SURFACE_HEIGHT - txt_rect.height) // 2
+
             surface.blit(sub_surface, [0, 0])
-            surface.blit(txt_gameover, [100, 220])
+            surface.blit(txt_gameover, [text_x, text_y])
+            stuffed = 0
+
+        if step == STEP_GAMECLEAR:
+            logging.info(stuffed)
+
+            sub_surface = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT), pygame.SRCALPHA)
+            sub_surface.fill((0, 0, 0, 100))
+
+            # テキストの矩形を取得
+            txt_rect = txt_gameclear.get_rect()
+
+            # 画面の中央に配置するための座標を計算
+            text_x = (SURFACE_WIDTH - txt_rect.width) // 2
+            text_y = (SURFACE_HEIGHT - txt_rect.height) // 2
+
+            surface.blit(sub_surface, [0, 0])
+            surface.blit(txt_gameclear, [text_x, text_y])
             stuffed = 0
 
         # 満腹メータ
