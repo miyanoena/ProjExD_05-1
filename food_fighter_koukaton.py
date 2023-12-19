@@ -93,7 +93,7 @@ def locate_item():
             item_type[i] = 'r'
 
 # アイテムの落下と当たり判定
-def move_item(surface):
+def move_item(surface, score):
     for i in range(item_num):
         item_y[i] += 6 + i / 5 
         if item_y[i] > SURFACE_HEIGHT:
@@ -105,7 +105,7 @@ def move_item(surface):
             # プレイヤーとアイテムの座標を見て当たったか判定
             if is_item_hit(px, PLAYER_Y, item_x[i], item_y[i]) == True:
                 item_hit[i] = True
-                hit_item(item_type[i], surface)
+                hit_item(item_type[i], surface, score)
 
 # アイテムを描画
 def draw_item(surface):
@@ -116,19 +116,42 @@ def draw_item(surface):
         elif item_hit[i] == False and item_type[i] == 'r':
             surface.blit(
                 img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
+            
+# 担当追加機能 スコア表示
+# 鶏肉に当たったら+10、まめに当たったら-20
+# 1回のゲームが終わったらスコアがリセットされるようにする（まだできてない）
+class Score:
+    def __init__(self):
+        self.font = pygame.font.SysFont("hgp創英角ポップ体", 30)
+        self.color = (0, 0, 225)
+        self.score = 0   #初期スコア設定
+        self.img = self.font.render("表示させる文字列", 0, self.color)
+        self.rct = self.img.get_rect()
+        self.place = (0, 0)  #左上にスコアを表示
+
+    def update(self, screen:pygame.Surface):
+        self.img = self.font.render(f"score:{self.score}", 0, self.color)
+        screen.blit(self.img, self.place)  #スコアをスクリーンに表示
+        
+
+
+
 
 # アイテムに当たったときの処理
-def hit_item(category, surface):
+def hit_item(category, surface, score):
     global stuffed, dmg_effect
 
     # 鶏肉の時は満腹メータプラス
     if category == 'd':
         stuffed += 10 
+        score.score += 10
         if stuffed > STUFFED_MAX:
             stuffed = STUFFED_MAX
     # 豆の場合は満腹メータ激減り
     elif category == 'r':
         stuffed -= 20
+        score.score -= 20
+    
         if stuffed < 0:
             stuffed = 0
         dmg_effect = 1
@@ -151,6 +174,8 @@ def main():
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode((SURFACE_WIDTH, SURFACE_HEIGHT))
+    score = Score()
+    
 
     # ループ
     while True:
@@ -198,13 +223,14 @@ def main():
 
             # キャラクター、アイテム移動
             move_player(pygame.key.get_pressed())
-            move_item(surface)
+            move_item(surface, score)
 
         # ゲームオーバー
         elif step == STEP_GAMEOVER:
             if timer == 50:
                 step = STEP_READY
                 timer = 0
+                score = 0
 
         # 各種描画
         bx = 0
@@ -215,6 +241,7 @@ def main():
             bx = random.randint(-60, 20)
             by = random.randint(-40, 10)
             dmg_effect = 0
+
             # # ダメージ受けたらこうかとん巨大化
             # p_width = p_width*1.2
             # p_height = p_height*1.2
@@ -257,6 +284,8 @@ def main():
         surface.fill((stuffed_r, stuffed_g, stuffed_b), (50, 30, stuffed, 40))
 
         # ゲーム画面更新
+        pygame.display.update()
+        score.update(surface)
         pygame.display.update()
         clock.tick(10)
 
