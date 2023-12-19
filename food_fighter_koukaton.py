@@ -48,7 +48,8 @@ icon = pygame.image.load('ex05/img/6.png')
 # 背景
 img_bg = pygame.image.load('ex05/img/pg_bg.jpg')
 # プレイヤー
-img_player = pygame.image.load('ex05/img/3.png')
+img_player_1 = pygame.image.load('ex05/img/3.png')
+img_player_2 = pygame.image.load('ex05/img/ojisan.png')
 # アイテム（鶏肉）
 img_donuts = pygame.transform.rotozoom(pygame.image.load('ex05/img/toriniku.png'),0,0.15)
 # アイテム（豆）
@@ -142,7 +143,7 @@ def is_item_hit(x1, y1, x2, y2):
 # main関数
 def main():
     global step, timer, stuffed, px, is_jump
-    global item_num, img_player, flg_turn, dmg_effect
+    global item_num, img_player_1, img_player_2, flg_turn, dmg_effect
     global p_width, p_height
 
     # ウィンドウを作成
@@ -155,6 +156,8 @@ def main():
     # ループ
     while True:
         timer += 1
+
+        pressed_key = pygame.key.get_pressed()
 
         # イベントごとの処理
         for event in pygame.event.get():
@@ -177,7 +180,12 @@ def main():
             px = SURFACE_WIDTH / 2
             p_width = PLAYER_WIDTH
             p_height = PLAYER_HEIGHT
-            img_player = pygame.image.load('ex05/img/3.png')
+
+            #　Spaceキーを押しているときだけプレイヤー画像の変更
+            if pressed_key[pygame.K_SPACE]:
+                img_player_2 = pygame.image.load('ex05/img/ojisan.png')
+            else:
+                img_player_1 = pygame.image.load('ex05/img/3.png')
 
             # 最初は10個からスタートし、だんだん増えてくる
             item_num = 10
@@ -192,6 +200,12 @@ def main():
                 timer = 0
             if item_num != ITEM_MAX and timer % 15 == 0:
                 item_num += 10
+
+            #　Spaceキーを押しているときだけプレイヤー画像の変更
+            if pressed_key[pygame.K_SPACE]:
+                img_player_2 = pygame.image.load('ex05/img/ojisan.png')
+            else:
+                img_player_1 = pygame.image.load('ex05/img/3.png')
 
             # 時間経過でも徐々に満腹メータ減る
             stuffed -= 0.5
@@ -224,11 +238,19 @@ def main():
         surface.blit(img_bg, [bx, by])
 
         if flg_turn == True:
-            img_player = pygame.transform.flip(img_player, True, False)
-            flg_turn = False
+            if pressed_key[pygame.K_SPACE]:
+                img_player_2 = pygame.transform.flip(img_player_2, True, False)
+                flg_turn = False
+            else:
+                img_player_1 = pygame.transform.flip(img_player_1, True, False)
+                flg_turn = False
 
         # こうかとん描画
-        surface.blit(img_player, [px-p_width/2, PLAYER_Y-p_height/2])
+        #　Spaceキーを押しているときだけプレイヤー画像の変更
+        if pressed_key[pygame.K_SPACE]:
+            surface.blit(img_player_2, [px-p_width/2, PLAYER_Y-p_height/2])
+        else:
+            surface.blit(img_player_1, [px-p_width/2, PLAYER_Y-p_height/2])
 
         # アイテム描画
         draw_item(surface)
