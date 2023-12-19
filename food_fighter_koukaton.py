@@ -238,7 +238,7 @@ def main():
         # アイテム描画
         draw_item(surface)
 
-        # ゲームオーバー
+        # ゲームオーバー(表示方法の修正)
         if step == STEP_GAMEOVER:
             logging.info(stuffed)
 
@@ -257,6 +257,7 @@ def main():
             surface.blit(txt_gameover, [text_x, text_y])
             stuffed = 0
 
+        # ゲームクリア(追加機能)
         if step == STEP_GAMECLEAR:
             logging.info(stuffed)
 
