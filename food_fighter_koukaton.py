@@ -14,11 +14,11 @@ STEP_GAMEOVER = 2
 
 # アイテム設定
 ITEM_TYPE_NUM = 2
-ITEM_WIDTH = 50
-ITEM_HEIGHT = 72 
+ITEM_WIDTH = 10
+ITEM_HEIGHT = 10 
 ITEM_MAX = 60
 
-# ビーバーちゃん設定
+# こうかとん設定
 PLAYER_WIDTH = 50
 PLAYER_HEIGHT = 72
 PLAYER_Y = 520
@@ -50,9 +50,9 @@ img_bg = pygame.image.load('ex05/img/pg_bg.jpg')
 # プレイヤー
 img_player = pygame.image.load('ex05/img/3.png')
 # アイテム（鶏肉）
-img_donuts = pygame.image.load('ex05/img/toriniku.png')
-# アイテム（唐辛子）
-img_red_hot = pygame.image.load('ex05/img/mame.png')
+img_donuts = pygame.transform.rotozoom(pygame.image.load('ex05/img/toriniku.png'),0,0.15)
+# アイテム（豆）
+img_red_hot = pygame.transform.rotozoom(pygame.image.load('ex05/img/mame.png'),0,0.15)
 # ゲームオーバー
 txt_gameover = pygame.image.load('ex05/img/txt_gameover.png')
 
@@ -81,15 +81,15 @@ def move_player(key):
 def locate_item():
     # アイテム数MAX値まで繰り返し
     for i in range(ITEM_MAX):
-        # ランダムでドーナツか唐辛子どっちかを設定する
+        # ランダムで鶏肉か豆どっちかを設定する
         item_x[i] = random.randint(50, SURFACE_WIDTH-50-ITEM_WIDTH/2)
         item_y[i] = random.randint(-500, 0)
 
         if i % ITEM_TYPE_NUM == 0:  
-            # ドーナツ
+            # 鶏肉
             item_type[i] = 'd'
         else:
-            # 激辛唐辛子
+            # 豆
             item_type[i] = 'r'
 
 # アイテムの落下と当たり判定
@@ -121,12 +121,12 @@ def draw_item(surface):
 def hit_item(category, surface):
     global stuffed, dmg_effect
 
-    # ドーナツゲットの時は満腹メータプラス
+    # 鶏肉の時は満腹メータプラス
     if category == 'd':
         stuffed += 10 
         if stuffed > STUFFED_MAX:
             stuffed = STUFFED_MAX
-    # 激辛唐辛子の場合は満腹メータ激減り
+    # 豆の場合は満腹メータ激減り
     elif category == 'r':
         stuffed -= 20
         if stuffed < 0:
@@ -147,7 +147,7 @@ def main():
 
     # ウィンドウを作成
     pygame.init()
-    pygame.display.set_caption('くいしんぼうビーバーちゃんのドーナツいっぱい食べたい！')
+    pygame.display.set_caption('こうかとんは食いしん坊')
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode((SURFACE_WIDTH, SURFACE_HEIGHT))
@@ -173,7 +173,7 @@ def main():
 
             flg_turn = False
 
-            # ビーバーちゃんスタンバイ
+            # こうかとんスタンバイ
             px = SURFACE_WIDTH / 2
             p_width = PLAYER_WIDTH
             p_height = PLAYER_HEIGHT
@@ -215,10 +215,10 @@ def main():
             bx = random.randint(-60, 20)
             by = random.randint(-40, 10)
             dmg_effect = 0
-            # ダメージ受けたらビーバーちゃん巨大化
-            p_width = p_width*1.2
-            p_height = p_height*1.2
-            img_player = pygame.transform.scale(img_player, (p_width,p_height))
+            # # ダメージ受けたらこうかとん巨大化
+            # p_width = p_width*1.2
+            # p_height = p_height*1.2
+            # img_player = pygame.transform.scale(img_player, (p_width,p_height))
 
         # 背景
         surface.blit(img_bg, [bx, by])
@@ -227,7 +227,7 @@ def main():
             img_player = pygame.transform.flip(img_player, True, False)
             flg_turn = False
 
-        # ビーバーちゃん描画
+        # こうかとん描画
         surface.blit(img_player, [px-p_width/2, PLAYER_Y-p_height/2])
 
         # アイテム描画
