@@ -37,7 +37,7 @@ item_hit = [False] * ITEM_MAX
 item_x = [0] * ITEM_MAX
 item_y = [0] * ITEM_MAX
 item_type = [''] * ITEM_MAX
-item_num = 10
+item_num = 50
 flg_turn = False
 last_key = pygame.K_RIGHT
 dmg_effect = 0
@@ -125,6 +125,10 @@ def draw_item(surface):
             surface.blit(
                 img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
 
+# 白いフィルタのサーフェス            
+white_filter = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT))
+white_filter.fill((255, 255, 255, 128))# 白いフィルタ（半透明）
+
 # アイテムに当たったときの処理
 def hit_item(category, surface):
     global stuffed, dmg_effect
@@ -139,6 +143,7 @@ def hit_item(category, surface):
         stuffed += 5
         if stuffed > STUFFED_MAX:
             stuffed = STUFFED_MAX
+        dmg_effect = 10  # 画面にフィルタをかける時間（秒)
     # 豆の場合は満腹メータ激減り
     elif category == 'r':
         stuffed -= 20
@@ -200,8 +205,8 @@ def main():
             p_height = PLAYER_HEIGHT
             img_player = pygame.image.load('ex05/img/3.png')
 
-            # 最初は3個からスタートし、だんだん増えてくる
-            item_num = 5
+            # 最初は10個からスタートし、だんだん増えてくる
+            item_num = 10
 
             # アイテム落下
             locate_item()
@@ -231,11 +236,16 @@ def main():
         bx = 0
         by = 0
 
-        if dmg_effect > 0:
+        if dmg_effect == 1:
             # ダメージ受けた場合は画面揺らす
             bx = random.randint(-60, 20)
             by = random.randint(-40, 10)
             dmg_effect = 0
+            # ダメージエフェクト（白いフィルタかける）
+        elif dmg_effect >= 5:
+            (white_filter, [500,500])  # 白いフィルタをかぶせる
+            #if time.time() - start_time > dmg_effect:
+                #dmg_effect = 0  # ダメージエフェクト終了
             # # ダメージ受けたらこうかとん巨大化
             # p_width = p_width*1.2
             # p_height = p_height*1.2
@@ -279,7 +289,7 @@ def main():
 
         # ゲーム画面更新
         pygame.display.update()
-        clock.tick(10)
+        clock.tick(20)
 
 # main実行
 main()
