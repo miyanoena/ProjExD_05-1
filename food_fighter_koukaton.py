@@ -74,7 +74,7 @@ def move_player(key):
         if px < 50+p_width/2:
             px = 50+p_width/2
         if last_key == pygame.K_RIGHT:
-            flg_turn = True
+            flg_turn = False
             last_key = pygame.K_LEFT
     # 「→」キー押下した時の動き
     elif key[pygame.K_RIGHT] == 1: 
@@ -171,7 +171,6 @@ def hit_item(category, surface, score):
         score.score += 10
         if stuffed > STUFFED_MAX:
             stuffed = STUFFED_MAX
-        dmg_effect = 10  # 画面にフィルタをかける時間（秒)
     #毒キノコの時は満腹メータ少しプラス
     elif category == 'k':
         stuffed += 5
@@ -275,6 +274,9 @@ def main():
                 timer = 0
             if item_num != ITEM_MAX and timer % 15 == 0:
                 item_num += 10
+            if timer >= 1200:
+                step = STEP_GAMECLEAR
+                timer = 0
 
             # 時間経過でも徐々に満腹メータ減る
             stuffed -= 0.5
