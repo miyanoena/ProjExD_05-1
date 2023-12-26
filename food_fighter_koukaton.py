@@ -65,7 +65,10 @@ def move_player(key):
 
     # 「⇦」キー押下の動き
     if key[pygame.K_LEFT] == 1:  
-        px -= 10
+        if key[pygame.K_LSHIFT] == 1:
+            px -= 30
+        else:
+            px -= 5
         if px < 50+p_width/2:
             px = 50+p_width/2
         if last_key == pygame.K_RIGHT:
@@ -73,7 +76,10 @@ def move_player(key):
             last_key = pygame.K_LEFT
     # 「→」キー押下した時の動き
     elif key[pygame.K_RIGHT] == 1: 
-        px += 10
+        if key[pygame.K_LSHIFT] == 1:
+            px += 30
+        else:
+            px += 5
         if px > SURFACE_WIDTH-50-p_width/2:
             px = SURFACE_WIDTH-50-p_width/2
         if last_key == pygame.K_LEFT:
