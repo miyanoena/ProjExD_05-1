@@ -65,7 +65,7 @@ def move_player(key):
         if key[pygame.K_LSHIFT] == 1:
             px -= 30
         else:
-            px -= 10
+            px -= 5
         if px < 50+p_width/2:
             px = 50+p_width/2
         if last_key == pygame.K_RIGHT:
@@ -76,7 +76,7 @@ def move_player(key):
         if key[pygame.K_LSHIFT] == 1:
             px += 30
         else:
-            px += 10
+            px += 5
         if px > SURFACE_WIDTH-50-p_width/2:
             px = SURFACE_WIDTH-50-p_width/2
         if last_key == pygame.K_LEFT:
