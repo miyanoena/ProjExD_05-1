@@ -223,6 +223,7 @@ def main():
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode((SURFACE_WIDTH, SURFACE_HEIGHT))
+    p = None
     score = Score()
     p = None
     
@@ -304,6 +305,8 @@ def main():
 
             #if time.time() - start_time > dmg_effect:
                 #dmg_effect = 0  # ダメージエフェクト終了
+
+
             # # ダメージ受けたらこうかとん巨大化
             # p_width = p_width*1.2
             # p_height = p_height*1.2
@@ -388,10 +391,7 @@ def main():
         pygame.display.update()
         score.update(surface)  # スコアを画面に表示
         pygame.display.update()
-        score.update(surface)  # スコアを画面に表示
-        pygame.display.update()
-        clock.tick(20)
-
+        clock.tick(10)
 
 # main実行
 main()
