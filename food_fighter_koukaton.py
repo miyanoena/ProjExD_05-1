@@ -274,7 +274,7 @@ def main():
                 timer = 0
             if item_num != ITEM_MAX and timer % 15 == 0:
                 item_num += 10
-            if timer >= 1200:
+            if timer >= 500:
                 step = STEP_GAMECLEAR
                 timer = 0
 
