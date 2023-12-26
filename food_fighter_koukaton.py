@@ -4,7 +4,7 @@ import random
 import sys
 
 # 画面サイズ
-SURFACE_WIDTH = 800
+SURFACE_WIDTH = 900
 SURFACE_HEIGHT = 550
 
 # STEP
@@ -14,10 +14,10 @@ STEP_GAMEOVER = 2
 STEP_GAMECLEAR = 3
 
 # アイテム設定
-ITEM_TYPE_NUM = 2
+ITEM_TYPE_NUM = 3
 ITEM_WIDTH = 10
 ITEM_HEIGHT = 10 
-ITEM_MAX = 60
+ITEM_MAX = 20
 
 # こうかとん設定
 PLAYER_WIDTH = 50
@@ -38,7 +38,7 @@ item_hit = [False] * ITEM_MAX
 item_x = [0] * ITEM_MAX
 item_y = [0] * ITEM_MAX
 item_type = [''] * ITEM_MAX
-item_num = 10
+item_num = 50
 flg_turn = False
 last_key = pygame.K_RIGHT
 dmg_effect = 0
@@ -55,6 +55,8 @@ img_player_2 = pygame.image.load('ex05/img/ojisan.png')
 img_donuts = pygame.transform.rotozoom(pygame.image.load('ex05/img/toriniku.png'),0,0.15)
 # アイテム（豆）
 img_red_hot = pygame.transform.rotozoom(pygame.image.load('ex05/img/mame.png'),0,0.15)
+#アイテム（毒キノコ）
+img_poison = pygame.transform.rotozoom(pygame.image.load('ex05/img/kinoko.png'),0,0.15)
 # ゲームオーバー
 txt_gameover = pygame.transform.rotozoom(pygame.image.load('ex05/img/txt_gameover.png'),0, 0.6)
 # ゲームクリア
@@ -84,13 +86,16 @@ def move_player(key):
 def locate_item():
     # アイテム数MAX値まで繰り返し
     for i in range(ITEM_MAX):
-        # ランダムで鶏肉か豆どっちかを設定する
+        # ランダムで鶏肉か豆か毒キノコどれかを設定する
         item_x[i] = random.randint(50, SURFACE_WIDTH-50-ITEM_WIDTH/2)
         item_y[i] = random.randint(-500, 0)
 
         if i % ITEM_TYPE_NUM == 0:  
             # 鶏肉
             item_type[i] = 'd'
+        elif i % ITEM_TYPE_NUM == 1:
+            #毒キノコ
+            item_type[i] = 'k'
         else:
             # 豆
             item_type[i] = 'r'
@@ -116,6 +121,9 @@ def draw_item(surface):
         if item_hit[i] == False and item_type[i] == 'd':
             surface.blit(
                 img_donuts, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
+        elif item_hit[i] == False and item_type[i] == 'k':
+            surface.blit(
+                img_poison, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
         elif item_hit[i] == False and item_type[i] == 'r':
             surface.blit(
                 img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
@@ -151,9 +159,19 @@ def hit_item(category, surface, score):
     # 鶏肉の時は満腹メータプラス
     if category == 'd':
         stuffed += 10 
+        stuffed += 10 
+        score.score += 10
+        stuffed += 10
         score.score += 10
         if stuffed > STUFFED_MAX:
             stuffed = STUFFED_MAX
+        dmg_effect = 10  # 画面にフィルタをかける時間（秒)
+    #毒キノコの時は満腹メータ少しプラス
+    elif category == 'k':
+        stuffed += 5
+        if stuffed > STUFFED_MAX:
+            stuffed = STUFFED_MAX
+        dmg_effect = 10  # 画面にフィルタをかける時間（秒)
     # 豆の場合は満腹メータ激減り
     elif category == 'r':
         stuffed -= 20
@@ -169,6 +187,24 @@ def is_item_hit(x1, y1, x2, y2):
         return True
     return False
 
+#毒キノコによる視界不良
+class Poison():
+    '''
+    毒キノコをキャッチすると視界が
+    白くなる機能を作成する
+    '''
+    def __init__(self, PLAYER_Y: PLAYER_Y):
+    # 白いフィルタのサーフェス            
+        self.white_filter = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT))
+        self.white_filter.fill((255, 255, 255, 128))# 白いフィルタ（半透明）
+        self.white_filter.set_alpha(200)
+        self.rect = self.white_filter.get_rect()
+        self.life = 5
+    
+    def update(self, screen):
+        self.life -= 1
+        screen.blit(self.white_filter, self.rect)
+
 # main関数
 def main():
     global step, timer, stuffed, px, is_jump
@@ -182,6 +218,7 @@ def main():
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode((SURFACE_WIDTH, SURFACE_HEIGHT))
     score = Score()
+    p = None
     
 
     # ループ
@@ -231,15 +268,6 @@ def main():
                 timer = 0
             if item_num != ITEM_MAX and timer % 15 == 0:
                 item_num += 10
-            if timer >= 1200:
-                step = STEP_GAMECLEAR
-                timer = 0
-
-            #　Spaceキーを押しているときだけプレイヤー画像の変更
-            if pressed_key[pygame.K_SPACE]:
-                img_player_2 = pygame.image.load('ex05/img/ojisan.png')
-            else:
-                img_player_1 = pygame.image.load('ex05/img/3.png')
 
             # 時間経過でも徐々に満腹メータ減る
             stuffed -= 0.5
@@ -259,12 +287,17 @@ def main():
         bx = 0
         by = 0
 
-        if dmg_effect > 0:
+        if dmg_effect == 1:
             # ダメージ受けた場合は画面揺らす
             bx = random.randint(-60, 20)
             by = random.randint(-40, 10)
             dmg_effect = 0
+            # ダメージエフェクト（白いフィルタかける）
+        elif dmg_effect >= 5:
+            p = Poison(PLAYER_Y) # 白いフィルタをかぶせる
 
+            #if time.time() - start_time > dmg_effect:
+                #dmg_effect = 0  # ダメージエフェクト終了
             # # ダメージ受けたらこうかとん巨大化
             # p_width = p_width*1.2
             # p_height = p_height*1.2
@@ -340,11 +373,19 @@ def main():
             stuffed_b = 128
         surface.fill((stuffed_r, stuffed_g, stuffed_b), (50, 30, stuffed, 40))
 
+        #白いフィルターの更新
+        if p is not None:
+            p.update(surface)
+            if p.life >= 0:
+                p = None
         # ゲーム画面更新
         pygame.display.update()
         score.update(surface)  # スコアを画面に表示
         pygame.display.update()
-        clock.tick(10)
+        score.update(surface)  # スコアを画面に表示
+        pygame.display.update()
+        clock.tick(20)
+
 
 # main実行
 main()
