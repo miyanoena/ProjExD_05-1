@@ -4,7 +4,7 @@ import random
 import sys
 
 # 画面サイズ
-SURFACE_WIDTH = 800
+SURFACE_WIDTH = 900
 SURFACE_HEIGHT = 550
 
 # STEP
