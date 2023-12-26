@@ -117,14 +117,18 @@ def draw_item(surface):
             surface.blit(
                 img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
             
-# 担当追加機能 スコア表示
-# 鶏肉に当たったら+10、まめに当たったら-20
-# 1回のゲームが終わったらスコアがリセットされるようにする（まだできてない）
+# 担当追加機能
+#スコア表示：鶏肉に当たったら+10、まめは-20
+
+# ToDo
+# 1回のゲームが終わったらスコアがリセットされる
+        
+
 class Score:
     def __init__(self):
         self.font = pygame.font.SysFont("hgp創英角ポップ体", 30)
         self.color = (0, 0, 225)
-        self.score = 0   #初期スコア設定
+        self.score = 200   #初期スコア設定
         self.img = self.font.render("表示させる文字列", 0, self.color)
         self.rct = self.img.get_rect()
         self.place = (0, 0)  #左上にスコアを表示
@@ -230,7 +234,7 @@ def main():
             if timer == 50:
                 step = STEP_READY
                 timer = 0
-                score = 0
+                #score = 0
 
         # 各種描画
         bx = 0
@@ -285,7 +289,7 @@ def main():
 
         # ゲーム画面更新
         pygame.display.update()
-        score.update(surface)
+        score.update(surface)  # スコアを画面に表示
         pygame.display.update()
         clock.tick(10)
 
