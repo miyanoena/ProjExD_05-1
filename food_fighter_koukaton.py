@@ -125,10 +125,6 @@ def draw_item(surface):
             surface.blit(
                 img_red_hot, [item_x[i]-ITEM_WIDTH/2, item_y[i]-ITEM_HEIGHT/2])
 
-# 白いフィルタのサーフェス            
-white_filter = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT))
-white_filter.fill((255, 255, 255, 128))# 白いフィルタ（半透明）
-
 # アイテムに当たったときの処理
 def hit_item(category, surface):
     global stuffed, dmg_effect
@@ -160,10 +156,20 @@ def is_item_hit(x1, y1, x2, y2):
 #毒キノコによる視界不良
 class Poison():
     '''
-    毒キノコをキャッチすると5秒間視界が
+    毒キノコをキャッチすると視界が
     白くなる機能を作成する
     '''
-    #def __init__(self, PLAYER_Y: PLAYER_Y):
+    def __init__(self, PLAYER_Y: PLAYER_Y):
+    # 白いフィルタのサーフェス            
+        self.white_filter = pygame.Surface((SURFACE_WIDTH, SURFACE_HEIGHT))
+        self.white_filter.fill((255, 255, 255, 128))# 白いフィルタ（半透明）
+        self.white_filter.set_alpha(200)
+        self.rect = self.white_filter.get_rect()
+        self.life = 5
+    
+    def update(self, screen):
+        self.life -= 1
+        screen.blit(self.white_filter, self.rect)
 
 # main関数
 def main():
@@ -177,6 +183,7 @@ def main():
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode((SURFACE_WIDTH, SURFACE_HEIGHT))
+    p = None
 
     # ループ
     while True:
@@ -243,7 +250,8 @@ def main():
             dmg_effect = 0
             # ダメージエフェクト（白いフィルタかける）
         elif dmg_effect >= 5:
-            (white_filter, [500,500])  # 白いフィルタをかぶせる
+            p = Poison(PLAYER_Y) # 白いフィルタをかぶせる
+
             #if time.time() - start_time > dmg_effect:
                 #dmg_effect = 0  # ダメージエフェクト終了
             # # ダメージ受けたらこうかとん巨大化
@@ -287,6 +295,11 @@ def main():
             stuffed_b = 128
         surface.fill((stuffed_r, stuffed_g, stuffed_b), (50, 30, stuffed, 40))
 
+        #白いフィルターの更新
+        if p is not None:
+            p.update(surface)
+            if p.life >= 0:
+                p = None
         # ゲーム画面更新
         pygame.display.update()
         clock.tick(20)
